@@ -40,7 +40,7 @@
         content:
           application/json:
             schema:
-              $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain.yaml#/components/schemas/QueryBodyType'
+              $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain-components.yaml#/components/schemas/QueryBodyType'
         required: true
       responses:
         "200":
@@ -48,22 +48,22 @@
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain.yaml#/components/schemas/ResponseBodyType'
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain-components.yaml#/components/schemas/ResponseBodyType'
         "400":
           description: Bad request - check the format and contents of the request.
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain.yaml#/components/schemas/ErrorListType'
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain-components.yaml#/components/schemas/ErrorListType'
         "401":
           description: Bad or expired token. Re-authenticate the user to fix.
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain.yaml#/components/schemas/ErrorListType'
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain-components.yaml#/components/schemas/ErrorListType'
         "403":
           description: Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain.yaml#/components/schemas/ErrorListType'
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain-components.yaml#/components/schemas/ErrorListType'
