@@ -1,0 +1,69 @@
+    post:
+      tags:
+      - school
+      summary: Query school data.
+      description: Query school data with filtering.
+      operationId: getFilteredSchools
+      parameters:
+      - name: page
+        in: query
+        description: The page number of the paginated query.
+        required: true
+        style: form
+        explode: true
+        schema:
+          minimum: 1
+          type: integer
+          example: 1
+      - name: limit
+        in: query
+        description: The maximum results per page.
+        required: true
+        style: form
+        explode: true
+        schema:
+          maximum: 200
+          minimum: 1
+          type: integer
+          example: 20
+      - name: x-correlation-id
+        in: header
+        description: Correlation ID used to track requests.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: bcf0f7bc-8a29-4f76-9538-c3e0220fd845
+      requestBody:
+        description: Request body used to filter response.
+        content:
+          application/json:
+            schema:
+              $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/components/schemas/QueryBodyType'
+        required: true
+      responses:
+        "200":
+          description: Successful school search query response.
+          content:
+            application/json:
+              schema:
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/components/schemas/ResponseBodyType'
+        "400":
+          description: Bad Request - The server cannot or will not process the request due to an apparent client error (e.g., malformed request syntax, size too large, invalid request message framing, or deceptive request routing).
+          content:
+            application/json:
+              schema:
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/components/schemas/CommonErrorsType'
+        "404":
+          description: Not Found - The requested resource could not be found but may be available in the future. Subsequent requests by the client are permissible.
+          content:
+            application/json:
+              schema:
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/components/schemas/CommonErrorsType'   
+        "500":
+          description: Internal Server Error - A generic error message, given when an unexpected condition was encountered and no more specific message is suitable.
+          content:
+            application/json:
+              schema:
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/components/schemas/CommonErrorsType'

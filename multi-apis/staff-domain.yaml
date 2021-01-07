@@ -1,0 +1,69 @@
+    post:
+      tags:
+      - staff
+      summary: Query Staff data.
+      description: Query Staff data with filtering.
+      operationId: getStaffList
+      parameters:
+      - name: page
+        in: query
+        description: The page number of the paginated query.
+        required: true
+        style: form
+        explode: true
+        schema:
+          minimum: 1
+          type: integer
+          example: 1
+      - name: limit
+        in: query
+        description: The size of the page to return.
+        required: true
+        style: form
+        explode: true
+        schema:
+          maximum: 200
+          minimum: 1
+          type: integer
+          example: 3
+      - name: x-correlation-id
+        in: header
+        description: The correltion id.
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          example: 06bfcb75-7694-49ac-bb30-53f100253d70
+      requestBody:
+        description: Request body used to filter response.
+        content:
+          application/json:
+            schema:
+              $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain-components.yaml#/components/schemas/QueryBodyType'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain-components.yaml#/components/schemas/ResponseBodyType'
+        "400":
+          description: Bad request - check the format and contents of the request.
+          content:
+            application/json:
+              schema:
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain-components.yaml#/components/schemas/ErrorListType'
+        "401":
+          description: Bad or expired token. Re-authenticate the user to fix.
+          content:
+            application/json:
+              schema:
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain-components.yaml#/components/schemas/ErrorListType'
+        "403":
+          description: Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).
+          content:
+            application/json:
+              schema:
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/staff-domain-components.yaml#/components/schemas/ErrorListType'
