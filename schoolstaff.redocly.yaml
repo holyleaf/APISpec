@@ -1,0 +1,25 @@
+---
+openapi: 3.0.0
+info:
+  title: School Domain API
+  description: School domain API exposing data from multiple sources
+  contact:
+    name: NSW DoE Integration Competency Centre
+    email: icc@det.nsw.edu.au
+  version: 1.1.0
+servers:
+- url: https://virtserver.swaggerhub.com/nsw-education/school-domain/1.1.0
+  description: SwaggerHub API Auto Mocking
+- url: https://example.com
+  description: Sandbox
+tags:
+- name: school
+  description: Search Staff
+- name: staff
+  description: Search Staff
+paths:
+  /schools/search:    
+    $ref: 'https://api.redoc.ly/registry/doe-8qz/school-domain/v1.1.0/bundle/v1/5b79f1e8-4ee7-11eb-ac5a-0374e3edc68b/openapi.yaml'
+  /staff/search:
+    $ref: 'https://api.redoc.ly/registry/doe-8qz/staff-domain/v1.1.5/bundle/v1/a9541b34-4fda-11eb-9ea7-e7ae8efa81f6/openapi.yaml'
+
