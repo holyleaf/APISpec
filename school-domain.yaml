@@ -55,36 +55,15 @@
             application/json:
               schema:
                 $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/components/schemas/CommonErrorsType'
-              example:
-                errors:
-                - status: 400
-                  title: Bad Request - The server cannot or will not process the request due to an apparent client error (e.g., malformed request syntax, size too large, invalid request message framing, or deceptive request routing).
-                  correlationId: 0-6098de50-ff39-11e8-b02a-06ec01bade82
-                  referenceId: 0-6098de50-ff39-11e8-b02a-06ec01bade82
         "404":
           description: Not Found - The requested resource could not be found but may be available in the future. Subsequent requests by the client are permissible.
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/components/schemas/CommonErrorsType'
-              example:
-                errors:
-                - status: 404
-                  title: Not Found -The requested resource could not be found but may be available in the future. Subsequent requests by the client are permissible.
-                  correlationId: 0-6098de50-ff39-11e8-b02a-06ec01bade82
-                  referenceId: 0-6098de50-ff39-11e8-b02a-06ec01bade82
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/components/schemas/CommonErrorsType'   
         "500":
           description: Internal Server Error - A generic error message, given when an unexpected condition was encountered and no more specific message is suitable.
           content:
             application/json:
               schema:
                 $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/components/schemas/CommonErrorsType'
-              example:
-                errors:
-                - status: 500
-                  title: Internal Server Error - A generic error message, given when an unexpected condition was encountered and no more specific message is suitable.
-                  correlationId: 0-6098de50-ff39-11e8-b02a-06ec01bade82
-                  referenceId: 0-6098de50-ff39-11e8-b02a-06ec01bade82
-      security:
-      - Oauth2:
-        - school-domain/read
