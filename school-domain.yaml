@@ -40,7 +40,7 @@
         content:
           application/json:
             schema:
-              $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/QueryBodyType'
+              $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/components/schemas/QueryBodyType'
         required: true
       responses:
         "200":
@@ -48,13 +48,13 @@
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/ResponseBodyType'
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/components/schemas/ResponseBodyType'
         "400":
           description: Bad Request - The server cannot or will not process the request due to an apparent client error (e.g., malformed request syntax, size too large, invalid request message framing, or deceptive request routing).
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/CommonErrorsType'
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/components/schemas/CommonErrorsType'
               example:
                 errors:
                 - status: 400
@@ -66,7 +66,7 @@
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/CommonErrorsType'
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/components/schemas/CommonErrorsType'
               example:
                 errors:
                 - status: 404
@@ -78,7 +78,7 @@
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/CommonErrorsType'
+                $ref: 'https://raw.githubusercontent.com/holyleaf/APISpec/main/school-domain-components.yaml#/components/schemas/CommonErrorsType'
               example:
                 errors:
                 - status: 500
