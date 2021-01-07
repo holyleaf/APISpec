@@ -1,0 +1,6460 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Student Finance Administration API",
+    "description": "XF Student Finance Administration Integration (XAI) API",
+    "contact": {
+      "name": "Student Administration Finance product stream",
+      "url": "https://education.nsw.gov.au/products/student-finance",
+      "email": "xai-student-finance@education.nsw.gov.au"
+    },
+    "version": "0.9.3"
+  },
+  "servers": [
+    {
+      "url": "https://localhost:8443/finance/xai/student/v1",
+      "description": "Development environment endpoint"
+    }
+  ],
+  "security": [
+    {
+      "nsw-education-oidc-dev": [
+        "openid",
+        "finance"
+      ]
+    },
+    {
+      "nsw-education-oidc-test": [
+        "openid",
+        "finance"
+      ]
+    },
+    {
+      "nsw-education-jwt": []
+    },
+    {
+      "nsw-education-oauth2-test": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "GL accounts",
+      "description": "SAP GL accounts master data oubound interface."
+    },
+    {
+      "name": "Fund codes",
+      "description": "SAP fund code master data oubound interface."
+    },
+    {
+      "name": "Cost centre",
+      "description": "SAP cost centre master data outbound interface."
+    },
+    {
+      "name": "Internal order",
+      "description": "SAP internal order master data outbound interface."
+    },
+    {
+      "name": "WBS element",
+      "description": "SAP WBS element master data outbound interface."
+    },
+    {
+      "name": "BSB",
+      "description": "SAP BSB master data outbound interface."
+    },
+    {
+      "name": "Petty cash",
+      "description": "SAP petty cash master data outbound interface."
+    },
+    {
+      "name": "Business partner",
+      "description": "SAP business partner master data outbound interface."
+    },
+    {
+      "name": "Fee mapping",
+      "description": "SAP fee mapping creation and deletion interfaces."
+    },
+    {
+      "name": "Receipt",
+      "description": "SAP receipts inbound interface."
+    },
+    {
+      "name": "Cash refund",
+      "description": "SAP cash refund inbound interface."
+    },
+    {
+      "name": "Cheque refund",
+      "description": "SAP cheque refund inbound interface."
+    },
+    {
+      "name": "Card refund",
+      "description": "SAP EFT and EPAY refund inbound interface."
+    },
+    {
+      "name": "EFTPOS refund",
+      "description": "SAP EFTPOS refund inbound interface."
+    },
+    {
+      "name": "Confirmation",
+      "description": "SAP confirmations outbound interface."
+    },
+    {
+      "name": "Mandatory fee",
+      "description": "SAP mandatory fees inbound interface."
+    },
+    {
+      "name": "inbound",
+      "description": "Used to refer to and tag inbound finance interfaces."
+    },
+    {
+      "name": "outbound",
+      "description": "Used to refer to and tag outbound finance interfaces."
+    }
+  ],
+  "paths": {
+    "/gl-accounts/search": {
+      "post": {
+        "tags": [
+          "GL accounts",
+          "outbound"
+        ],
+        "summary": "Search GL accounts for multiple school codes",
+        "description": "Given multiple school codes in the request body, the interface responds with a list of GL accounts\nfound for each supplied location.\n",
+        "operationId": "search-gl-accounts-by-locations",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more school codes (locations)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SchoolCodeArrayType"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/gl-accounts": {
+      "get": {
+        "tags": [
+          "GL accounts",
+          "outbound"
+        ],
+        "summary": "Get a list of GL accounts for a single location.",
+        "description": "Given a single school code in the request URI, the interface responds with a list of GL accounts located for the supplied school code.",
+        "operationId": "get-gl-accounts-by-location",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data for the requested input value could not be located.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fund-codes/search": {
+      "post": {
+        "tags": [
+          "Fund codes",
+          "outbound"
+        ],
+        "summary": "Search fund codes for multiple school locations",
+        "description": "Given multiple school codes in the request body, the interface responds with a list of fund codes\nfound for each supplied school location.\n",
+        "operationId": "search-fund-codes-by-locations",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more school codes (locations)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SchoolCodeArrayType"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/fund-codes": {
+      "get": {
+        "tags": [
+          "Fund codes",
+          "outbound"
+        ],
+        "summary": "Get a list of fund codes for a single location.",
+        "description": "Given a single school code in the request URI, the interface responds with a list of fund codes\nfound for the supplied location.\n",
+        "operationId": "get-fund-codes-by-school-code",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data for the requested input value could not be located.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cost-centres/search": {
+      "post": {
+        "tags": [
+          "Cost centre",
+          "outbound"
+        ],
+        "summary": "Search cost centres for multiple school codes",
+        "description": "Given multiple school codes in the request body, the interface responds with a list of cost centres\nfound for each supplied location.\n",
+        "operationId": "search-cost-centres-by-locations",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more school codes (locations)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SchoolCodeArrayType"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/cost-centres": {
+      "get": {
+        "tags": [
+          "Cost centre",
+          "outbound"
+        ],
+        "summary": "Get a list of cost centres for a single location.",
+        "description": "Given a single school code in the request URI, the interface responds with a list of cost centres located for the supplied school code.",
+        "operationId": "get-cost-centres-by-location",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data for the requested input value could not be located.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal-orders/search": {
+      "post": {
+        "tags": [
+          "Internal order",
+          "outbound"
+        ],
+        "summary": "Search internal orders for multiple school codes",
+        "description": "Given multiple school codes in the request body, the interface responds with a list of internal orders\nfound for each supplied location.\n",
+        "operationId": "search-internal-orders-by-locations",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more school codes (locations)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SchoolCodeArrayType"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_3"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/internal-orders": {
+      "get": {
+        "tags": [
+          "Internal order",
+          "outbound"
+        ],
+        "summary": "Get a list of internal orders for a single location.",
+        "description": "Given a single school code in the request URI, the interface responds with a list of internal orders located for the supplied school code.",
+        "operationId": "get-internal-orders-by-location",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_3"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data for the requested input value could not be located.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/mandatory-fees": {
+      "post": {
+        "tags": [
+          "Mandatory fee",
+          "inbound"
+        ],
+        "summary": "Post one or more mandatory fees into SAP per a single designated location.",
+        "description": "Given one or more mandatory fees, pass them on to SAP for a further processing.\n",
+        "operationId": "post-mandatory-fees",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more mandatory fees to process.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MandatoryFeeType"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wbs-elements/search": {
+      "post": {
+        "tags": [
+          "WBS element",
+          "outbound"
+        ],
+        "summary": "Search WBS elements for multiple school codes",
+        "description": "Given multiple school codes in the request body, the interface responds with a list of WBS elements\nfound for each supplied location.\n",
+        "operationId": "search-wbs-elements-by-locations",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more school codes (locations)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SchoolCodeArrayType"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_4"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/wbs-elements": {
+      "get": {
+        "tags": [
+          "WBS element",
+          "outbound"
+        ],
+        "summary": "Get a list of WBS elements for a single location.",
+        "description": "Given a single school code in the request URI, the interface responds with a list of WBS elements located for the supplied school code.",
+        "operationId": "get-wbs-elements-by-location",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_4"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data for the requested input value could not be located.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/petty-cash-funds/search": {
+      "post": {
+        "tags": [
+          "Petty cash",
+          "outbound"
+        ],
+        "summary": "Search multiple school locations for signs of handling the petty cash",
+        "description": "Given multiple school codes in the request body, the interface responds with a list of school codes and a corresponding\nflag for each location indicating whether the school in question handles the petty cash or not.\n",
+        "operationId": "search-petty-cash-funds-by-locations",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more school codes (locations)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SchoolCodeArrayType"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_5"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/petty-cash-funds": {
+      "get": {
+        "tags": [
+          "Petty cash",
+          "outbound"
+        ],
+        "summary": "Get a petty cash handling indicator for a given school location.",
+        "description": "Given a single school code in the request URI, the interface responds with the school code and a flag\nindicating whether the school location in question handles the petty cash or not.\n",
+        "operationId": "get-petty-cash-funds-by-location",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_5"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data for the requested input value could not be located.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bsb-codes/search": {
+      "post": {
+        "tags": [
+          "BSB",
+          "outbound"
+        ],
+        "summary": "Search BSB's for multiple school codes",
+        "description": "Given multiple school codes in the request body, the interface responds with a list of BSB's\nfound for each supplied location.\n",
+        "operationId": "search-bsb-codes-by-locations",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more school codes (locations)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SchoolCodeArrayType"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_6"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/bsb-codes": {
+      "get": {
+        "tags": [
+          "BSB",
+          "outbound"
+        ],
+        "summary": "Get a list of BSB's for a single location.",
+        "description": "Given a single school code in the request URI, the interface responds with a list of BSB's located for the supplied school code.",
+        "operationId": "get-bank-branches-by-location",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_6"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data for the requested input value could not be located.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/business-partners/search": {
+      "post": {
+        "tags": [
+          "Business partner",
+          "outbound"
+        ],
+        "summary": "Search business partners for multiple school codes",
+        "description": "Given multiple school codes in the request body, the interface responds with a list of business partners\nfound for each supplied location.\n",
+        "operationId": "search-business-partners-by-locations",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more school codes (locations)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SchoolCodeArrayType"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_7"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/business-partners": {
+      "get": {
+        "tags": [
+          "Business partner",
+          "outbound"
+        ],
+        "summary": "Get a list of business partners for a single location.",
+        "description": "Given a single school code in the request URI, the interface responds with a list of business partners\nlocated for the supplied school code.\n",
+        "operationId": "get-business-partners-by-location",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "The number of results per page the user wants to return.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "maximum": 16384,
+              "minimum": 1024,
+              "type": "integer",
+              "default": 8192
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_7"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Data for the requested input value could not be located.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/internal-orders/{internal-order}/fee-mappings": {
+      "post": {
+        "tags": [
+          "Fee mapping",
+          "inbound"
+        ],
+        "summary": "Create a fee mapping in SAP for a given internal order",
+        "description": "Given a fee mapping creation request for a nominated\nInternal order, forward them on to SAP for a further instantiation.\n",
+        "operationId": "create-fee-mapping-for-internal-order",
+        "parameters": [
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          },
+          {
+            "name": "internal-order",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/InternalOrderType"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more school codes (locations)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/FeeMappingCreationRequestType"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/wbs-elements/{wbs-element}/fee-mappings": {
+      "post": {
+        "tags": [
+          "Fee mapping",
+          "inbound"
+        ],
+        "summary": "Create a fee mapping in SAP for a given WBS element",
+        "description": "Given a fee mapping creation request for a nominated\nWBS element, forward them on to SAP for a further instantiation.\n",
+        "operationId": "create-fee-mapping-for-wbs-element",
+        "parameters": [
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          },
+          {
+            "name": "wbs-element",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/WBSElementType"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more school codes (locations)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/FeeMappingCreationRequestType"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/fee-mappings/{fee-id}/finance-applications/{finance-application}": {
+      "delete": {
+        "tags": [
+          "Fee mapping",
+          "inbound"
+        ],
+        "summary": "Delete an existing fee type mapping",
+        "description": "Given a fee type ID, the finance supplier name and the school code, delete it from SAP.",
+        "operationId": "delete-fee-mapping",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "finance-application",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/FinanceSystemType"
+            }
+          },
+          {
+            "name": "fee-id",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/FeeIDType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/receipts": {
+      "post": {
+        "tags": [
+          "Receipt",
+          "inbound"
+        ],
+        "summary": "Post one or more receipts into SAP per a single designated location.",
+        "description": "Given one or more receipts, forward them on to SAP for a further processing.\n",
+        "operationId": "post-receipts",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more receipts to process.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ReceiptsType"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/card-refunds": {
+      "post": {
+        "tags": [
+          "Card refund",
+          "inbound"
+        ],
+        "summary": "Post one or more card (EFT or EPAY) refunds into SAP per a single designated location.",
+        "description": "Given one or more card (EFT or EPAY) refunds, forward them on to SAP for a further processing.\n",
+        "operationId": "post-card-refunds",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more card refunds to process",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CardRefundType"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/cash-refunds": {
+      "post": {
+        "tags": [
+          "Cash refund",
+          "inbound"
+        ],
+        "summary": "Post one or more cash refunds into SAP per a single designated location.",
+        "description": "Given one or more cash refunds, forward them on to SAP for a further processing.\n",
+        "operationId": "post-cash-refunds",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more cash refunds to process",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CashRefundType"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/cheque-refunds": {
+      "post": {
+        "tags": [
+          "Cheque refund",
+          "inbound"
+        ],
+        "summary": "Post one or more cheque refunds into SAP per a single designated location.",
+        "description": "Given one or more cheque refunds, forward them on to SAP for a further processing.\n",
+        "operationId": "post-cheque-refunds",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more cheque refunds to process",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ChequeRefundType"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/confirmations": {
+      "post": {
+        "tags": [
+          "Confirmation",
+          "outbound"
+        ],
+        "summary": "Post one or more confirmations out of SAP.",
+        "description": "Given one or more receipt confirmations, pass them on to a vendor.\n",
+        "operationId": "post-confirmations",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more receipt confirmations from SAP.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ConfirmationType"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schools/{school-code}/eftpos-refunds": {
+      "post": {
+        "tags": [
+          "EFTPOS refund",
+          "inbound"
+        ],
+        "summary": "Post one or more EFTPOS refunds into SAP per a single designated location.",
+        "description": "Given one or more EFTPOS refunds, forward them on to SAP for a further processing.\n",
+        "operationId": "post-eft-refunds",
+        "parameters": [
+          {
+            "name": "domain",
+            "in": "query",
+            "description": "Domain query parameter",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "finance",
+                "student",
+                "parent",
+                "wellbeing",
+                "staff",
+                "school",
+                "timetable",
+                "attendance",
+                "enrolment"
+              ]
+            },
+            "example": "finance"
+          },
+          {
+            "name": "school-code",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "description": "The correlation ID",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "$ref": "#/components/schemas/XCorrelationID"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts a list of one or more EFTPOS refunds to process",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/EFTRefundType"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Bad or expired token. Re-authenticate the user to fix.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Service encountered an internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Base32Type": {
+        "title": "Base32Type",
+        "pattern": "^[0123456789ABCDEFGHJKMNPQRSTVWXYZabcdefghjkmnpqrstvwxyz]{26}$",
+        "type": "string",
+        "description": "Base32 type used to encode the correlationID using the Universally Unique Lexicographically\nSortable Identifier (ULID, https://github.com/ulid/spec) as an alternative to UUID v4.\nBase32 is used as shown. This alphabet excludes the letters I, L, O, and U to avoid confusion and abuse.\n"
+      },
+      "LinkType": {
+        "type": "object",
+        "properties": {
+          "href": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "rel": {
+            "type": "string",
+            "enum": [
+              "first",
+              "next",
+              "prev",
+              "last",
+              "self"
+            ]
+          }
+        }
+      },
+      "PagedResponseTrait": {
+        "type": "object",
+        "properties": {
+          "_meta": {
+            "$ref": "#/components/schemas/PagedResponseTrait__meta"
+          },
+          "_links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkType"
+            }
+          }
+        }
+      },
+      "HTTPStatusType": {
+        "title": "HTTPStatusType",
+        "description": "A subset of HTTP status codes and phrases.",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  200
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "OK"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  201
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Created"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  202
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Accepted"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  204
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "No content"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  304
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Not Modified"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  400
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Bad Request"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  401
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Unauthorized"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  403
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Forbidden"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  404
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Not found"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  405
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Not allowed"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  406
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Not Acceptable"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  408
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Request Timeout"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  409
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Conflict"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  410
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Gone"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  412
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Length Required"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  412
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Precondition Failed"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  413
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Payload Too Large"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  414
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "URI Too Long"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  415
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Unsupported Media Type"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  418
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "I'm a teapot"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  429
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Too Many Requests"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  422
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Unprocessable Entity"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  431
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Request Header Fields Too Large"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  500
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Internal Server Error"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  501
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Method Not Implemented"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  503
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Service Unavailable"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  504
+                ]
+              },
+              "phrase": {
+                "type": "string",
+                "enum": [
+                  "Gateway Timeout"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "AuditEventType": {
+        "title": "AuditEventType",
+        "type": "object",
+        "properties": {
+          "correlationID": {
+            "description": "In most cases, it will be a copy of the correlation ID header.\nIn cases when an external system supplies its own transaction ID, use this field to copy the external transaction ID into it.\n",
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/Base32Type"
+              }
+            ]
+          },
+          "actor": {
+            "minLength": 3,
+            "type": "string",
+            "description": "Use to preserve the name of the system that initiates the event.\nFor incoming requests, use the remote system name, such as SAP or the source API name, if known.\nFor outgoing requests, use the API's own deployment name, such as dev-core-student-v1-nsw-edu-au.\nIf the source name can't be established or derived, use the default value.\n",
+            "default": "unascertained"
+          },
+          "operation": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Operation, or flow, or subflow, or the interface name - depending on the context.\nFor API's, use the «operationId» value from the OAS v3 specification.\nFor web services, supply the web service operation name.\nUse metadata when providing the metadata information about a specific resource (maps from HEAD or OPTIONS HTTP verbs).\n"
+          },
+          "eventType": {
+            "type": "string",
+            "description": "For REST API's, map the HTTP verb onto one of the above. For web services, select the eventType based on the semantics of the operation.\n",
+            "enum": [
+              "create",
+              "read",
+              "update",
+              "delete",
+              "head",
+              "options",
+              "metadata"
+            ]
+          },
+          "references": {
+            "minItems": 0,
+            "type": "array",
+            "description": "Use to map any extra external identifiers available in the request.\nExamples include: SAP batch or file name, system user-id's etc.\nIt must be supplied as a JSON map: [ { \"key1\": \"value1\" }, { \"key2\": \"value2\" } ]\n",
+            "items": {
+              "type": "object"
+            }
+          },
+          "resources": {
+            "minItems": 0,
+            "type": "array",
+            "description": "Use to provide information of resource the operation is acting upon, if readily available.\nExamples include SRN's, queue names, Kafka topic, stream or table names.\nIt must be supplied as a JSON map: [ { \"key1\": \"value1\" }, { \"key2\": \"value2\" } ].\nFor Kafka, use { \"topic\": \"XAI_Finance_Confirmations\" }\n",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "description": "Audit event type to allow to preserve the full event metadata"
+      },
+      "AuditTrailType": {
+        "title": "AuditTrailType",
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/AuditTrailType_meta"
+          }
+        },
+        "description": "Audit trail type for each received request (before forwarding on) and each generated response (before being relayed back to the caller)"
+      },
+      "ErrorType": {
+        "title": "ErrorType",
+        "type": "object",
+        "properties": {
+          "correlationId": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/Base32Type"
+              }
+            ]
+          },
+          "referenceId": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/Base32Type"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/HTTPStatusType"
+          }
+        },
+        "description": "Common API error type"
+      },
+      "EventMetadataType": {
+        "title": "Kafka event metadata type",
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/EventMetadataType_meta"
+          }
+        },
+        "description": "Event metadata that is used to facilitate the event discovery, event correlation\nfor application, monitoring and troublshooting purposes.\n"
+      },
+      "ErrorEventType": {
+        "title": "ErrorEventType",
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "detailedMessage": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "attachment": {
+            "type": "object"
+          }
+        },
+        "description": "Common event error type"
+      },
+      "SchoolCodeType": {
+        "pattern": "^\\d{4}$",
+        "type": "string",
+        "description": "A numeric school code represented as a four digit text string",
+        "example": "8232"
+      },
+      "SchoolCodeArrayType": {
+        "type": "object",
+        "properties": {
+          "schoolCodes": {
+            "minItems": 1,
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SchoolCodeType"
+            }
+          }
+        }
+      },
+      "EffectiveDatesTrait": {
+        "type": "object",
+        "properties": {
+          "effectiveDates": {
+            "$ref": "#/components/schemas/EffectiveDatesTrait_effectiveDates"
+          }
+        }
+      },
+      "GSTCodeType": {
+        "type": "string",
+        "enum": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S7"
+        ]
+      },
+      "FinanceSystemType": {
+        "maxLength": 4,
+        "minLength": 1,
+        "type": "string",
+        "description": "Vendor specific unique finance system name"
+      },
+      "FeeIDType": {
+        "maxLength": 6,
+        "minLength": 1,
+        "type": "string",
+        "example": "PCDON"
+      },
+      "FeeValueType": {
+        "pattern": "^\\d{1,10}$",
+        "type": "string",
+        "description": "A positiveInteger(10) value representing the fee value",
+        "example": "179533"
+      },
+      "FeeDefinitionType": {
+        "required": [
+          "effectiveDates",
+          "typeID",
+          "valueID"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "properties": {
+              "typeID": {
+                "$ref": "#/components/schemas/FeeIDType"
+              },
+              "valueID": {
+                "$ref": "#/components/schemas/FeeValueType"
+              }
+            }
+          },
+          {
+            "properties": {
+              "description": {
+                "maxLength": 40,
+                "minLength": 1,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "$ref": "#/components/schemas/EffectiveDatesTrait"
+          }
+        ]
+      },
+      "FinanceProviderDocumentType": {
+        "maxLength": 10,
+        "minLength": 1,
+        "type": "string",
+        "description": "Document number in SAP after posting"
+      },
+      "FinancialProcessorType": {
+        "type": "object",
+        "properties": {
+          "invoiceNumber": {
+            "maxLength": 10,
+            "minLength": 1,
+            "type": "string",
+            "description": "Invoice number generated in SAP for Commercial receipts."
+          },
+          "customer": {
+            "maxLength": 10,
+            "minLength": 1,
+            "type": "string",
+            "description": "Business partner (customer) name created in SAP."
+          },
+          "comment": {
+            "maxLength": 240,
+            "minLength": 1,
+            "type": "string",
+            "description": "SAP comment field."
+          }
+        }
+      },
+      "BankDepositType": {
+        "required": [
+          "bankDeposit"
+        ],
+        "type": "object",
+        "properties": {
+          "bankDeposit": {
+            "$ref": "#/components/schemas/BankDepositType_bankDeposit"
+          }
+        },
+        "description": "Bank deposit type for transactions with payment method «CASH», «CHEQUE», «MONEY ORDER»\n"
+      },
+      "GSTComponentType": {
+        "required": [
+          "gst"
+        ],
+        "type": "object",
+        "properties": {
+          "gst": {
+            "$ref": "#/components/schemas/GSTComponentType_gst"
+          }
+        }
+      },
+      "RevenueFeeType": {
+        "required": [
+          "fee"
+        ],
+        "type": "object",
+        "properties": {
+          "fee": {
+            "$ref": "#/components/schemas/RevenueFeeType_fee"
+          }
+        }
+      },
+      "ReceiptsType": {
+        "title": "ReceiptsType",
+        "description": "Revenue and refunds event type to post receipts and refunds from Student finance applications to SAP,\nin order to post into the SAP General Ledger.\n",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventMetadataType"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/ReceiptsType_data"
+              }
+            }
+          }
+        ]
+      },
+      "PaymentInformationType": {
+        "required": [
+          "paymentInformation"
+        ],
+        "type": "object",
+        "properties": {
+          "paymentInformation": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/BankDepositType"
+              },
+              {
+                "$ref": "#/components/schemas/EPaymentType"
+              },
+              {
+                "$ref": "#/components/schemas/ChequeDepositType"
+              },
+              {
+                "$ref": "#/components/schemas/MoneyOrderDepositType"
+              }
+            ]
+          }
+        }
+      },
+      "PettyCashResponseType": {
+        "title": "PettyCashResponseType",
+        "type": "object",
+        "properties": {
+          "pettyCashFunds": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/EffectiveDatesTrait"
+                },
+                {
+                  "properties": {
+                    "schoolCode": {
+                      "$ref": "#/components/schemas/SchoolCodeType"
+                    },
+                    "indicators": {
+                      "type": "object",
+                      "properties": {
+                        "active": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "description": "Petty cash response type indicating whether a particular school still handles the petty cash"
+      },
+      "CommonPersonType": {
+        "required": [
+          "firstName",
+          "lastName"
+        ],
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "For people with single names this field need not be present.\nThe single name should be in the lastName field.\n"
+          },
+          "middleNames": {
+            "minItems": 0,
+            "type": "array",
+            "items": {
+              "maxLength": 50,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "lastName": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "For people with single names the single name should be in this field"
+          }
+        }
+      },
+      "CommonPhoneNumberType": {
+        "required": [
+          "number",
+          "purpose"
+        ],
+        "type": "object",
+        "properties": {
+          "isPreferred": {
+            "type": "boolean",
+            "description": "May be true for one and only one entry to indicate the preferred phone number.\nAssumed to be 'false' if not present.\n",
+            "default": false
+          },
+          "purpose": {
+            "type": "string",
+            "description": "The purpose of the number as specified by the customer",
+            "default": "UNSPECIFIED",
+            "enum": [
+              "MOBILE",
+              "HOME",
+              "WORK",
+              "OTHER",
+              "INTERNATIONAL",
+              "UNSPECIFIED"
+            ]
+          },
+          "countryCode": {
+            "type": "string",
+            "description": "If absent, assumed to be Australia (+61). The + should be included"
+          },
+          "areaCode": {
+            "type": "string",
+            "description": "Required for non Mobile Phones, if field is present and refers to Australian code - the leading 0 should be omitted.\n"
+          },
+          "number": {
+            "type": "string",
+            "description": "The actual phone number, with leading zeros as appropriate"
+          },
+          "extension": {
+            "type": "string",
+            "description": "An extension number (if applicable)"
+          },
+          "fullNumber": {
+            "type": "string",
+            "description": "Fully formatted phone number with country code, area code, number and extension\nincorporated. Formatted according to section 5.1.4. of [RFC 3966](https://www.ietf.org/rfc/rfc3966.txt)\n"
+          }
+        }
+      },
+      "CommonSimpleAddressType": {
+        "required": [
+          "addressLine1",
+          "city",
+          "countryName",
+          "state"
+        ],
+        "type": "object",
+        "properties": {
+          "mailingName": {
+            "type": "string",
+            "description": "Name of the individual or business formatted for inclusion in an address used for physical mail"
+          },
+          "addressLine1": {
+            "type": "string",
+            "description": "First line of the standard address object"
+          },
+          "addressLine2": {
+            "type": "string",
+            "description": "Second line of the standard address object"
+          },
+          "addressLine3": {
+            "type": "string",
+            "description": "Third line of the standard address object"
+          },
+          "postcode": {
+            "type": "string",
+            "description": "Mandatory for Australian addresses"
+          },
+          "city": {
+            "type": "string",
+            "description": "Name of the city or locality"
+          },
+          "state": {
+            "$ref": "#/components/schemas/AustralianStateType"
+          },
+          "stateName": {
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string",
+            "description": "Fully worded state or territory name if the country is not Australia."
+          },
+          "countryCode": {
+            "maxLength": 3,
+            "minLength": 2,
+            "type": "string",
+            "description": "A valid [ISO 3166 Alpha-3](https://www.iso.org/iso-3166-country-codes.html) country code. Australia (AUS) is assumed if country is not present.",
+            "default": "AUS"
+          },
+          "countryName": {
+            "minLength": 4,
+            "type": "string",
+            "description": "Full country name, defaults to Australia.",
+            "default": "Australia"
+          }
+        }
+      },
+      "ConfirmationType": {
+        "additionalProperties": false,
+        "description": "SAP outbound receipt, refund and mandatory fee confirmation type",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventMetadataType"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/ConfirmationType_data"
+              }
+            }
+          }
+        ]
+      },
+      "AustralianStateType": {
+        "type": "string",
+        "description": "If country is Australia then must be one of the values defined\nby the [State Type Abbreviation](https://auspost.com.au/content/dam/auspost_corp/media/documents/australia-post-data-guide.pdf)\nin the PAF file format: NSW, QLD, VIC, NT, WA, SA, TAS, ACT, AAT\n",
+        "enum": [
+          "AAT",
+          "ACT",
+          "NSW",
+          "NT",
+          "QLD",
+          "SA",
+          "TAS",
+          "VIC",
+          "WA"
+        ]
+      },
+      "BankBranchAddressType": {
+        "required": [
+          "city",
+          "state"
+        ],
+        "type": "object",
+        "properties": {
+          "mailingName": {
+            "maxLength": 35,
+            "minLength": 1,
+            "type": "string"
+          },
+          "addressLine1": {
+            "maxLength": 35,
+            "minLength": 1,
+            "type": "string"
+          },
+          "addressLine2": {
+            "maxLength": 35,
+            "minLength": 1,
+            "type": "string"
+          },
+          "addressLine3": {
+            "maxLength": 35,
+            "minLength": 1,
+            "type": "string"
+          },
+          "city": {
+            "maxLength": 35,
+            "minLength": 1,
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/AustralianStateType"
+          },
+          "postcode": {
+            "pattern": "^\\d{4}$",
+            "type": "string"
+          },
+          "country": {
+            "maxLength": 3,
+            "minLength": 2,
+            "type": "string",
+            "default": "AUS"
+          }
+        },
+        "description": "Bank branch address type. Replicates the Consumer Data Standards' CommonSimpleAddress\nwith exception of the post code being optional.\n"
+      },
+      "BSBCodeType": {
+        "pattern": "^\\d{3}-{0,1}\\d{3}$",
+        "type": "string",
+        "description": "Australian BSB type"
+      },
+      "MasterDataBaseType": {
+        "type": "object",
+        "allOf": [
+          {
+            "properties": {
+              "schoolCode": {
+                "$ref": "#/components/schemas/SchoolCodeType"
+              },
+              "indicators": {
+                "$ref": "#/components/schemas/MasterDataBaseType_indicators"
+              },
+              "description": {
+                "maxLength": 50,
+                "minLength": 1,
+                "type": "string",
+                "example": "8530-Education delivery"
+              }
+            }
+          },
+          {
+            "$ref": "#/components/schemas/EffectiveDatesTrait"
+          }
+        ]
+      },
+      "FloatingPointType": {
+        "pattern": "^[+-]{0,1}(([1-9][0-9]*)|[0])[.]([0-9]{2,4})$",
+        "type": "string"
+      },
+      "TransactionDesignationType": {
+        "type": "string",
+        "enum": [
+          "adjustment",
+          "receipt",
+          "cash-refund",
+          "cheque-refund",
+          "eft-refund",
+          "eftpos-refund",
+          "epay-refund",
+          "mandatory-fee",
+          "receipt-cancellation"
+        ]
+      },
+      "TransactionSignageType": {
+        "type": "string",
+        "description": "«debit» for debit charges or «+» in SAP terms\n«credit» for credits (such as refunds) or «-» in SAP terms\n",
+        "enum": [
+          "debit",
+          "credit"
+        ]
+      },
+      "EPaymentType": {
+        "type": "object",
+        "properties": {
+          "ePayment": {
+            "$ref": "#/components/schemas/EPaymentType_ePayment"
+          }
+        },
+        "description": "Credit card payment gateway information type"
+      },
+      "RevenueType": {
+        "required": [
+          "amount",
+          "method",
+          "signage"
+        ],
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "description": "SAP supports following payment methods:\n  CASH – maps onto «cash»\n  CHEQUE – maps onto «cheque»\n  MONEYORDER – maps onto «money-order»\n  EPAY – maps onto «epay». ePayments, e.g. credit card payments through the parent portal.\n  EFTPOS - maps onto «eftpos»\n  THIRDPARTY – maps onto «third-party». Previously known as payment method «NFB» – «Not for Banking».\n    For all EFT payments received as direct deposit into the DoE bank account, corresponding\n    transactions from a student finance system received in SAP with payment method «THIRDPARTY».\n    Example includes payments from Centrelink.\n  REFEFTPOS – maps onto «eftpos-refund»\n  REFEPAY – maps onto «epay-refund»\n  REFCSH – maps onto «cash-refund»\n  REFEFT – maps onto «eft-refund»\n  REFCHEQUE – maps ontp «cheque-refund»\nWhen a reverse mapping is required, run the above mapping guidelines backward.\n",
+            "enum": [
+              "cash",
+              "cheque",
+              "money-order",
+              "epay",
+              "eftpos",
+              "third-party",
+              "eftpos-refund",
+              "epay-refund",
+              "cash-refund",
+              "eft-refund",
+              "cheque-refund"
+            ]
+          },
+          "amount": {
+            "$ref": "#/components/schemas/FloatingPointType"
+          },
+          "signage": {
+            "$ref": "#/components/schemas/TransactionSignageType"
+          }
+        },
+        "description": "Enumeration of available payment types that encompass both, receipts, refunds, adjustments and edge cases"
+      },
+      "BankAccountNumberType": {
+        "type": "object",
+        "properties": {
+          "bsb": {
+            "$ref": "#/components/schemas/BSBCodeType"
+          },
+          "accountNumber": {
+            "pattern": "^\\d{5,9}$",
+            "type": "string"
+          }
+        },
+        "description": "Common bank account number type"
+      },
+      "ChequeDepositType": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BankDepositType"
+          },
+          {
+            "properties": {
+              "cheque": {
+                "$ref": "#/components/schemas/ChequeDepositType_cheque"
+              }
+            }
+          }
+        ]
+      },
+      "MoneyOrderDepositType": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BankDepositType"
+          },
+          {
+            "properties": {
+              "moneyOrder": {
+                "$ref": "#/components/schemas/MoneyOrderDepositType_moneyOrder"
+              }
+            }
+          }
+        ]
+      },
+      "FinanceProviderType": {
+        "type": "object",
+        "properties": {
+          "transactions": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceProviderType_transactions"
+            }
+          }
+        },
+        "description": "Finance system provider specific data type"
+      },
+      "FinanceSupplierBaseType": {
+        "required": [
+          "supplier"
+        ],
+        "type": "object",
+        "properties": {
+          "financeApplication": {
+            "$ref": "#/components/schemas/FinanceSupplierBaseType_financeApplication"
+          }
+        }
+      },
+      "MandatoryFeeType": {
+        "description": "Mandatory fee vendor facing data type",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FinanceSupplierBaseType"
+          },
+          {
+            "properties": {
+              "financeApplication": {
+                "$ref": "#/components/schemas/MandatoryFeeType_financeApplication"
+              }
+            }
+          }
+        ]
+      },
+      "RefundBaseType": {
+        "description": "Nominated specialised EFT refund vendor facing interface type",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FinanceSupplierBaseType"
+          },
+          {
+            "properties": {
+              "financeApplication": {
+                "$ref": "#/components/schemas/RefundBaseType_financeApplication"
+              }
+            }
+          }
+        ]
+      },
+      "RefundType": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RefundBaseType"
+          },
+          {
+            "properties": {
+              "designation": {
+                "type": "string",
+                "description": "For external refunds, set to «external» to indicate that payment to be made by Accounts Payable.\nOtherwise use the default value.\n",
+                "default": "standard",
+                "enum": [
+                  "external",
+                  "standard"
+                ]
+              },
+              "refundTransactionID": {
+                "pattern": "^\\d{4}-\\d{1,10}$",
+                "type": "string",
+                "description": "Refund transaction ID with school code prefixing the refund transaction line ID (see below)",
+                "example": "8410-102182396"
+              },
+              "lineID": {
+                "maxLength": 10,
+                "minLength": 1,
+                "type": "string",
+                "description": "Refund transaction line ID",
+                "example": "102182396"
+              },
+              "amount": {
+                "$ref": "#/components/schemas/FloatingPointType"
+              }
+            }
+          }
+        ]
+      },
+      "CardRefundType": {
+        "description": "Vendor facing EFTPOS/EPAY refund interface",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RefundBaseType"
+          },
+          {
+            "properties": {
+              "financeApplication": {
+                "$ref": "#/components/schemas/CardRefundType_financeApplication"
+              }
+            }
+          }
+        ]
+      },
+      "CashRefundType": {
+        "description": "Cash refund vendor facing interface",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RefundBaseType"
+          },
+          {
+            "properties": {
+              "financeApplication": {
+                "$ref": "#/components/schemas/CashRefundType_financeApplication"
+              }
+            }
+          }
+        ]
+      },
+      "ChequeRefundType": {
+        "additionalProperties": false,
+        "description": "Nominated refund (e.g. cheque or EFT) vendor facing interface type",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RefundBaseType"
+          },
+          {
+            "properties": {
+              "financeApplication": {
+                "$ref": "#/components/schemas/ChequeRefundType_financeApplication"
+              }
+            }
+          }
+        ]
+      },
+      "PayeeType": {
+        "required": [
+          "address",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "accountName": {
+            "maxLength": 40,
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/CommonPersonType"
+          },
+          "address": {
+            "$ref": "#/components/schemas/CommonSimpleAddressType"
+          }
+        },
+        "description": "Common payee type"
+      },
+      "RequestorType": {
+        "required": [
+          "email",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/CommonPersonType"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "description": "Common requestor type"
+      },
+      "EFTRefundType": {
+        "description": "Nominated specialised EFT refund vendor facing interface type",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/RefundBaseType"
+          },
+          {
+            "properties": {
+              "financeApplication": {
+                "$ref": "#/components/schemas/EFTRefundType_financeApplication"
+              }
+            }
+          }
+        ]
+      },
+      "BSBResponseType": {
+        "type": "object",
+        "properties": {
+          "schoolCode": {
+            "$ref": "#/components/schemas/SchoolCodeType"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "bankParticulars": {
+            "$ref": "#/components/schemas/BSBResponseType_bankParticulars"
+          }
+        },
+        "description": "BSB details are conveyed from SAP to a student finance application as the BSB details are required\nin Student finance application to properly validate and process refunds.\n"
+      },
+      "BusinessPartnerType": {
+        "type": "object",
+        "properties": {
+          "schoolCode": {
+            "$ref": "#/components/schemas/SchoolCodeType"
+          },
+          "businessParticulars": {
+            "$ref": "#/components/schemas/BusinessPartnerType_businessParticulars"
+          }
+        },
+        "description": "Business partner type describes a business entity that provides services to a school"
+      },
+      "BusinessPartnersResponseType": {
+        "title": "BusinessPartnersResponseType",
+        "type": "object",
+        "properties": {
+          "businessPartners": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BusinessPartnerType"
+            }
+          }
+        },
+        "description": "Business partners response type"
+      },
+      "GLAccountType": {
+        "pattern": "^\\d{1,6}$",
+        "type": "string",
+        "example": "420010"
+      },
+      "GLAccountsResponseType": {
+        "title": "GLAccountsResponseType",
+        "type": "object",
+        "properties": {
+          "glAccounts": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/MasterDataBaseType"
+                },
+                {
+                  "properties": {
+                    "glAccount": {
+                      "$ref": "#/components/schemas/GLAccountType"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "description": "GL accounts response type"
+      },
+      "FundCodeType": {
+        "title": "FundCodeType",
+        "pattern": "^\\d{1,4}$",
+        "type": "string",
+        "description": "Fund code type",
+        "example": "6300"
+      },
+      "FundCodesResponseType": {
+        "title": "FundCodeResponseType",
+        "type": "object",
+        "properties": {
+          "fundCodes": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/MasterDataBaseType"
+                },
+                {
+                  "properties": {
+                    "fundCode": {
+                      "$ref": "#/components/schemas/FundCodeType"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "description": "Fund codes response type"
+      },
+      "CostCentreType": {
+        "pattern": "^\\d{1,8}$",
+        "type": "string",
+        "example": "68530101"
+      },
+      "CostCentresResponseType": {
+        "title": "CostCentresResponseType",
+        "type": "object",
+        "properties": {
+          "costCentres": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/MasterDataBaseType"
+                },
+                {
+                  "properties": {
+                    "costCentre": {
+                      "$ref": "#/components/schemas/CostCentreType"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "description": "Cost centres response type"
+      },
+      "InternalOrderType": {
+        "pattern": "^\\d{1,10}$",
+        "type": "string",
+        "example": "2001023123"
+      },
+      "InternalOrdersResponseType": {
+        "title": "InternalOrdersResponseType",
+        "type": "object",
+        "properties": {
+          "internalOrders": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/MasterDataBaseType"
+                },
+                {
+                  "properties": {
+                    "internalOrder": {
+                      "$ref": "#/components/schemas/InternalOrderType"
+                    },
+                    "fundCode": {
+                      "$ref": "#/components/schemas/FundCodeType"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "description": "Internal orders response type"
+      },
+      "WBSElementType": {
+        "pattern": "^\\S{1,24}$",
+        "type": "string",
+        "example": "RDP/41101702"
+      },
+      "WBSElementsResponseType": {
+        "title": "WBSElementsResponseType",
+        "type": "object",
+        "properties": {
+          "wbsElements": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/MasterDataBaseType"
+                },
+                {
+                  "properties": {
+                    "wbsElement": {
+                      "$ref": "#/components/schemas/WBSElementType"
+                    },
+                    "fundCode": {
+                      "$ref": "#/components/schemas/FundCodeType"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "description": "WBS elements response type"
+      },
+      "FeeMappingCreationRequestType": {
+        "title": "FeeMappingRequestType",
+        "description": "Fee mapping creation request type",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventMetadataType"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/FeeMappingCreationRequestType_data"
+              }
+            }
+          }
+        ]
+      },
+      "FeeMappingDeletionRequestType": {
+        "title": "FeeMappingDeletionRequestType",
+        "description": "Fee mapping creation request type",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventMetadataType"
+          },
+          {
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/FeeMappingDeletionRequestType_data"
+              }
+            }
+          }
+        ]
+      },
+      "XCorrelationID": {
+        "example": [
+          "06bfcb75-7694-49ac-bb30-53f100253d70",
+          "01BX5ZZKBKACTAV9WEVGEMMVS1"
+        ],
+        "oneOf": [
+          {
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "$ref": "#/components/schemas/Base32Type"
+          }
+        ]
+      },
+      "inline_response_200": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PagedResponseTrait"
+          },
+          {
+            "$ref": "#/components/schemas/GLAccountsResponseType"
+          }
+        ]
+      },
+      "inline_response_200_1": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PagedResponseTrait"
+          },
+          {
+            "$ref": "#/components/schemas/FundCodesResponseType"
+          }
+        ]
+      },
+      "inline_response_200_2": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PagedResponseTrait"
+          },
+          {
+            "$ref": "#/components/schemas/CostCentresResponseType"
+          }
+        ]
+      },
+      "inline_response_200_3": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PagedResponseTrait"
+          },
+          {
+            "$ref": "#/components/schemas/InternalOrdersResponseType"
+          }
+        ]
+      },
+      "inline_response_200_4": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PagedResponseTrait"
+          },
+          {
+            "$ref": "#/components/schemas/WBSElementsResponseType"
+          }
+        ]
+      },
+      "inline_response_200_5": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PagedResponseTrait"
+          },
+          {
+            "$ref": "#/components/schemas/PettyCashResponseType"
+          }
+        ]
+      },
+      "inline_response_200_6": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PagedResponseTrait"
+          },
+          {
+            "$ref": "#/components/schemas/BSBResponseType"
+          }
+        ]
+      },
+      "inline_response_200_7": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PagedResponseTrait"
+          },
+          {
+            "$ref": "#/components/schemas/BusinessPartnersResponseType"
+          }
+        ]
+      },
+      "PagedResponseTrait__meta": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "maximum": 999999999999,
+            "minimum": 1,
+            "type": "number"
+          },
+          "limit": {
+            "minimum": 1,
+            "type": "number"
+          },
+          "count": {
+            "minimum": 1,
+            "type": "number"
+          }
+        }
+      },
+      "AuditTrailType_meta": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Use the inbound value to preserve the metadata for the data entering the service.\nFor requests received from SAP, use the inbound element to copy the SAP request metadata into it.\nUse the outbound element to preserve the metadata of the data leaving the service.\n",
+            "enum": [
+              "inbound",
+              "outbound"
+            ]
+          },
+          "event": {
+            "$ref": "#/components/schemas/AuditEventType"
+          }
+        }
+      },
+      "EventMetadataType_meta_event": {
+        "required": [
+          "actor",
+          "category",
+          "channel",
+          "createdAt",
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/Base32Type"
+              }
+            ]
+          },
+          "inReplyTo": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "$ref": "#/components/schemas/Base32Type"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actor": {
+            "pattern": "^\\S{1,}$",
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "inbound",
+              "inbound-ack",
+              "inbound-nack",
+              "outbound",
+              "outbound-ack",
+              "outbound-nack"
+            ]
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "receipts",
+              "cash-refunds",
+              "cheque-refunds",
+              "eft-refunds",
+              "eftpost-refunds",
+              "card-refunds",
+              "fee-mapping-creations",
+              "fee-mapping-deletions",
+              "mandatory-fees",
+              "confirmations",
+              "gl-accounts",
+              "fund-codes",
+              "cost-centres",
+              "internal-orders",
+              "wbs-elements",
+              "business-partners",
+              "bsb",
+              "petty-cash-funds"
+            ]
+          }
+        }
+      },
+      "EventMetadataType_meta": {
+        "type": "object",
+        "properties": {
+          "event": {
+            "$ref": "#/components/schemas/EventMetadataType_meta_event"
+          }
+        }
+      },
+      "EffectiveDatesTrait_effectiveDates": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date",
+            "example": "2013-01-01",
+            "default": "2013-01-01T00:00:00.000+0000"
+          },
+          "to": {
+            "type": "string",
+            "format": "date",
+            "example": "2999-12-31",
+            "default": "2999-12-31T00:00:00.000+0000"
+          }
+        }
+      },
+      "BankDepositType_bankDeposit_account": {
+        "required": [
+          "accountNumber",
+          "bsb"
+        ],
+        "type": "object",
+        "properties": {
+          "bsb": {
+            "$ref": "#/components/schemas/BankBranchAddressType"
+          },
+          "accountNumber": {
+            "$ref": "#/components/schemas/BankAccountNumberType"
+          }
+        }
+      },
+      "BankDepositType_bankDeposit": {
+        "required": [
+          "account",
+          "depositNumber",
+          "wasBankedOn"
+        ],
+        "type": "object",
+        "properties": {
+          "depositNumber": {
+            "maxLength": 6,
+            "minLength": 1,
+            "type": "string",
+            "description": "6 (six) digit code – begin with school code 'XXXX' appended with '01'.\nNote: The bank deposit number is a 6 digit static number, which appears on the Bank Deposit Slip.\nThis number is found in the deposit book. This is entered for transactions with payment\nmethod «CASH», «CHEQUE», «MONEY ORDER».\n"
+          },
+          "account": {
+            "$ref": "#/components/schemas/BankDepositType_bankDeposit_account"
+          },
+          "wasBankedOn": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "GSTComponentType_gst": {
+        "required": [
+          "amount",
+          "code",
+          "rate"
+        ],
+        "type": "object",
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/FloatingPointType"
+          },
+          "code": {
+            "$ref": "#/components/schemas/GSTCodeType"
+          },
+          "rate": {
+            "$ref": "#/components/schemas/FloatingPointType"
+          }
+        }
+      },
+      "RevenueFeeType_fee": {
+        "required": [
+          "signage",
+          "typeID",
+          "valueID"
+        ],
+        "type": "object",
+        "properties": {
+          "typeID": {
+            "$ref": "#/components/schemas/FeeIDType"
+          },
+          "valueID": {
+            "$ref": "#/components/schemas/FeeValueType"
+          },
+          "signage": {
+            "$ref": "#/components/schemas/TransactionSignageType"
+          },
+          "description": {
+            "maxLength": 240,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "ReceiptsType_data_financialRun": {
+        "required": [
+          "groupingID",
+          "runID",
+          "wasRunOn"
+        ],
+        "type": "object",
+        "properties": {
+          "runID": {
+            "pattern": "^$\\d{1,10}",
+            "type": "string",
+            "description": "This is «Send To SAPID» from the interface requirements."
+          },
+          "wasRunOn": {
+            "type": "string",
+            "description": "This is «Send To SAP Date» from the interface requirements.",
+            "format": "date"
+          },
+          "groupingID": {
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string",
+            "description": "This is «Deposit grouping ID» from the interface requirements.\nA unique system generated number grouped in the Student finance application by payment methods.\nEOD Settlement > Revenue Push (based upon Push to SAP using Deposit Grouping ID)\n"
+          }
+        },
+        "description": "This is the vendor side (financial application)"
+      },
+      "ReceiptsType_data_receipt": {
+        "required": [
+          "createdAt",
+          "designation",
+          "receiptNumber",
+          "revenue",
+          "wasEnteredOn"
+        ],
+        "type": "object",
+        "properties": {
+          "receiptNumber": {
+            "maxLength": 15,
+            "minLength": 1,
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "transactionType": {
+            "description": "This is «Transaction type» from interface requirements.\n",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TransactionDesignationType"
+              }
+            ]
+          },
+          "wasEnteredOn": {
+            "type": "string",
+            "description": "This is the «Transaction date» from interface requirements.\n\nTransaction date is the date the receipt is entered in the Student finance system.\nIt is possible to have two different transaction dates for the same deposit group ID.\n",
+            "format": "date"
+          },
+          "revenue": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RevenueType"
+              },
+              {
+                "$ref": "#/components/schemas/GSTComponentType"
+              },
+              {
+                "$ref": "#/components/schemas/RevenueFeeType"
+              },
+              {
+                "$ref": "#/components/schemas/PaymentInformationType"
+              }
+            ]
+          }
+        }
+      },
+      "ReceiptsType_data": {
+        "required": [
+          "financialRun",
+          "receipt",
+          "schoolCode"
+        ],
+        "type": "object",
+        "properties": {
+          "schoolCode": {
+            "$ref": "#/components/schemas/SchoolCodeType"
+          },
+          "financialProcessor": {
+            "description": "This is DoE SAP.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FinancialProcessorType"
+              }
+            ]
+          },
+          "financialRun": {
+            "$ref": "#/components/schemas/ReceiptsType_data_financialRun"
+          },
+          "receipt": {
+            "$ref": "#/components/schemas/ReceiptsType_data_receipt"
+          }
+        }
+      },
+      "ConfirmationType_data": {
+        "required": [
+          "financeProcessor"
+        ],
+        "type": "object",
+        "properties": {
+          "financeProcessor": {
+            "$ref": "#/components/schemas/FinanceProviderType"
+          }
+        }
+      },
+      "MasterDataBaseType_indicators": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "EPaymentType_ePayment": {
+        "type": "object",
+        "properties": {
+          "eftposTerminalID": {
+            "maxLength": 16,
+            "minLength": 1,
+            "type": "string"
+          },
+          "rejectedPaymentFlag": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ChequeDepositType_cheque": {
+        "required": [
+          "chequeNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "chequeNumber": {
+            "pattern": "^\\d{1,10}$",
+            "type": "string"
+          }
+        }
+      },
+      "MoneyOrderDepositType_moneyOrder": {
+        "required": [
+          "payeeName"
+        ],
+        "type": "object",
+        "properties": {
+          "payeeName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "FinanceProviderType_data_refund": {
+        "required": [
+          "lineID",
+          "paymentDate",
+          "refundType"
+        ],
+        "type": "object",
+        "properties": {
+          "refundType": {
+            "type": "string",
+            "enum": [
+              "eft-refund",
+              "cheque-refund"
+            ]
+          },
+          "lineID": {
+            "maximum": 9999999999,
+            "minimum": 1,
+            "type": "integer",
+            "description": "Refund transaction line ID – only applicable to refunds"
+          },
+          "paymentDate": {
+            "type": "string",
+            "description": "Date on which the payment occurred",
+            "format": "date"
+          }
+        },
+        "description": "Required if the confirmation is for cheque / EFT refunds only"
+      },
+      "FinanceProviderType_data": {
+        "required": [
+          "documentNumber",
+          "transactionType"
+        ],
+        "type": "object",
+        "properties": {
+          "transactionType": {
+            "$ref": "#/components/schemas/TransactionDesignationType"
+          },
+          "documentNumber": {
+            "description": "SAP document number – a unique document number SAP generates for each receipt or refund post.\n",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FinanceProviderDocumentType"
+              }
+            ]
+          },
+          "refund": {
+            "$ref": "#/components/schemas/FinanceProviderType_data_refund"
+          }
+        }
+      },
+      "FinanceProviderType_transactions": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/FinanceProviderType_data"
+          }
+        }
+      },
+      "FinanceSupplierBaseType_financeApplication_transaction": {
+        "required": [
+          "designation",
+          "documentNumber",
+          "groupingID",
+          "ofDate"
+        ],
+        "type": "object",
+        "properties": {
+          "designation": {
+            "$ref": "#/components/schemas/TransactionDesignationType"
+          },
+          "documentNumber": {
+            "pattern": "^\\d{1,10}$",
+            "type": "string",
+            "description": "Vendor generated internal document number.\nCan be used either for deposit grouping ID or for the invoice group ID – as per interface specifics\n"
+          },
+          "groupingID": {
+            "pattern": "^\\d{1,20}$",
+            "type": "string"
+          },
+          "ofDate": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "FinanceSupplierBaseType_financeApplication_gst": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/FloatingPointType"
+          },
+          "code": {
+            "$ref": "#/components/schemas/GSTCodeType"
+          },
+          "rate": {
+            "$ref": "#/components/schemas/FloatingPointType"
+          }
+        }
+      },
+      "FinanceSupplierBaseType_financeApplication_fee": {
+        "required": [
+          "signage",
+          "typeID",
+          "valueID"
+        ],
+        "type": "object",
+        "properties": {
+          "typeID": {
+            "$ref": "#/components/schemas/FeeIDType"
+          },
+          "valueID": {
+            "$ref": "#/components/schemas/FeeValueType"
+          },
+          "signage": {
+            "$ref": "#/components/schemas/TransactionSignageType"
+          }
+        }
+      },
+      "FinanceSupplierBaseType_financeApplication": {
+        "required": [
+          "createdAt",
+          "financeSystem",
+          "transaction"
+        ],
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "financeSystem": {
+            "$ref": "#/components/schemas/FinanceSystemType"
+          },
+          "transaction": {
+            "$ref": "#/components/schemas/FinanceSupplierBaseType_financeApplication_transaction"
+          },
+          "gst": {
+            "$ref": "#/components/schemas/FinanceSupplierBaseType_financeApplication_gst"
+          },
+          "fee": {
+            "$ref": "#/components/schemas/FinanceSupplierBaseType_financeApplication_fee"
+          }
+        }
+      },
+      "MandatoryFeeType_financeApplication_fee": {
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/FloatingPointType"
+          },
+          "ofDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "MandatoryFeeType_financeApplication": {
+        "properties": {
+          "fee": {
+            "$ref": "#/components/schemas/MandatoryFeeType_financeApplication_fee"
+          }
+        }
+      },
+      "RefundBaseType_financeApplication_transaction": {
+        "properties": {
+          "receiptNumber": {
+            "maxLength": 15,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "RefundBaseType_financeApplication": {
+        "properties": {
+          "transaction": {
+            "$ref": "#/components/schemas/RefundBaseType_financeApplication_transaction"
+          }
+        }
+      },
+      "CardRefundType_financeApplication_transaction": {
+        "type": "object",
+        "properties": {
+          "designation": {
+            "$ref": "#/components/schemas/TransactionDesignationType"
+          },
+          "documentNumber": {
+            "maxLength": 10,
+            "minLength": 1,
+            "type": "string",
+            "description": "Vendor generated internal document number.\nCan be used either for deposit grouping ID or for the\ninvoice group ID – as per interface specifics\n"
+          },
+          "groupingID": {
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string"
+          },
+          "ofDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "receiptNumber": {
+            "maxLength": 15,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "CardRefundType_financeApplication_fee": {
+        "properties": {
+          "typeID": {
+            "$ref": "#/components/schemas/FeeIDType"
+          },
+          "valueID": {
+            "$ref": "#/components/schemas/FeeValueType"
+          },
+          "signage": {
+            "$ref": "#/components/schemas/TransactionSignageType"
+          }
+        }
+      },
+      "CardRefundType_financeApplication": {
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "financeSystem": {
+            "$ref": "#/components/schemas/FinanceSystemType"
+          },
+          "transaction": {
+            "$ref": "#/components/schemas/CardRefundType_financeApplication_transaction"
+          },
+          "gst": {
+            "$ref": "#/components/schemas/FinanceSupplierBaseType_financeApplication_gst"
+          },
+          "fee": {
+            "$ref": "#/components/schemas/CardRefundType_financeApplication_fee"
+          },
+          "receipt": {
+            "allOf": [
+              {
+                "properties": {
+                  "paymentGateway": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/EPaymentType"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "CashRefundType_financeApplication_receipt": {
+        "properties": {
+          "ofDate": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "CashRefundType_financeApplication": {
+        "properties": {
+          "receipt": {
+            "$ref": "#/components/schemas/CashRefundType_financeApplication_receipt"
+          }
+        }
+      },
+      "ChequeRefundType_financeApplication_transaction": {
+        "properties": {
+          "designation": {
+            "$ref": "#/components/schemas/TransactionDesignationType"
+          },
+          "documentNumber": {
+            "maxLength": 10,
+            "minLength": 1,
+            "type": "string",
+            "description": "Vendor generated internal document number.\nCan be used either for deposit grouping ID or for the invoice\ngroup ID – as per interface specifics\n"
+          },
+          "groupingID": {
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string"
+          },
+          "ofDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "receiptNumber": {
+            "maxLength": 15,
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
+      "ChequeRefundType_financeApplication": {
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "financeSystem": {
+            "$ref": "#/components/schemas/FinanceSystemType"
+          },
+          "transaction": {
+            "$ref": "#/components/schemas/ChequeRefundType_financeApplication_transaction"
+          },
+          "refund": {
+            "$ref": "#/components/schemas/RefundType"
+          },
+          "payee": {
+            "$ref": "#/components/schemas/PayeeType"
+          },
+          "requestor": {
+            "$ref": "#/components/schemas/RequestorType"
+          },
+          "student": {
+            "$ref": "#/components/schemas/CommonPersonType"
+          }
+        }
+      },
+      "EFTRefundType_financeApplication": {
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "financeSystem": {
+            "$ref": "#/components/schemas/FinanceSystemType"
+          }
+        }
+      },
+      "BSBResponseType_bankParticulars_branchParticulars": {
+        "required": [
+          "branchAddress",
+          "bsb"
+        ],
+        "type": "object",
+        "properties": {
+          "bsb": {
+            "$ref": "#/components/schemas/BSBCodeType"
+          },
+          "branchName": {
+            "maxLength": 40,
+            "minLength": 1,
+            "type": "string"
+          },
+          "branchAddress": {
+            "$ref": "#/components/schemas/BankBranchAddressType"
+          }
+        }
+      },
+      "BSBResponseType_bankParticulars": {
+        "required": [
+          "bankName",
+          "bankParticulars"
+        ],
+        "type": "object",
+        "properties": {
+          "bankName": {
+            "maxLength": 60,
+            "minLength": 1,
+            "type": "string",
+            "example": "Bank of Robinson"
+          },
+          "branchParticulars": {
+            "$ref": "#/components/schemas/BSBResponseType_bankParticulars_branchParticulars"
+          }
+        }
+      },
+      "BusinessPartnerType_businessParticulars_partnerParticulars": {
+        "required": [
+          "partnerCode",
+          "partnerName1"
+        ],
+        "type": "object",
+        "properties": {
+          "partnerCode": {
+            "maxLength": 10,
+            "type": "string",
+            "example": "8020602"
+          },
+          "partnerName1": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "partnerName2": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "description": "Business Partners are what are referred to in SAP as «customers».\nThey are people or organisations/businesses that purchase or lease products or services\nfrom a school e.g. the lease of the school hall/canteen where an invoice has been provided.\n"
+      },
+      "BusinessPartnerType_businessParticulars": {
+        "required": [
+          "accountGroup",
+          "address",
+          "businessParticulars",
+          "indicators",
+          "partnerParticulars",
+          "phones"
+        ],
+        "type": "object",
+        "properties": {
+          "companyNumber": {
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string"
+          },
+          "partnerParticulars": {
+            "$ref": "#/components/schemas/BusinessPartnerType_businessParticulars_partnerParticulars"
+          },
+          "accountGroup": {
+            "maxLength": 4,
+            "type": "string",
+            "example": "Z030"
+          },
+          "address": {
+            "$ref": "#/components/schemas/CommonSimpleAddressType"
+          },
+          "phones": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommonPhoneNumberType"
+            }
+          },
+          "indicators": {
+            "$ref": "#/components/schemas/MasterDataBaseType_indicators"
+          }
+        }
+      },
+      "FeeMappingCreationRequestType_data_financeApplication_feeDefinition_gst": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/GSTCodeType"
+          }
+        }
+      },
+      "FeeMappingCreationRequestType_data_financeApplication_feeDefinition": {
+        "required": [
+          "costCentre",
+          "description",
+          "feeTypeID",
+          "feeValueID",
+          "fundCode",
+          "glAccount",
+          "gstCode"
+        ],
+        "properties": {
+          "fee": {
+            "$ref": "#/components/schemas/FeeDefinitionType"
+          },
+          "gst": {
+            "$ref": "#/components/schemas/FeeMappingCreationRequestType_data_financeApplication_feeDefinition_gst"
+          },
+          "indicators": {
+            "description": "Indicators is an optional element",
+            "anyOf": [
+              {
+                "properties": {
+                  "deductibleGiftReceipt": {
+                    "type": "boolean"
+                  },
+                  "enforceableDebt": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "description": "Fee type definition"
+      },
+      "FeeMappingCreationRequestType_data_financeApplication_contact": {
+        "type": "object",
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/CommonPersonType"
+          },
+          "email": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          }
+        }
+      },
+      "FeeMappingCreationRequestType_data_financeApplication": {
+        "type": "object",
+        "properties": {
+          "feeDefinition": {
+            "$ref": "#/components/schemas/FeeMappingCreationRequestType_data_financeApplication_feeDefinition"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/FeeMappingCreationRequestType_data_financeApplication_contact"
+          }
+        }
+      },
+      "FeeMappingCreationRequestType_data": {
+        "required": [
+          "contact",
+          "feeDefinition",
+          "provider",
+          "schoolCode",
+          "supplier"
+        ],
+        "type": "object",
+        "properties": {
+          "schoolCode": {
+            "$ref": "#/components/schemas/SchoolCodeType"
+          },
+          "financeApplication": {
+            "$ref": "#/components/schemas/FeeMappingCreationRequestType_data_financeApplication"
+          },
+          "financeProcessor": {
+            "required": [
+              "costCentre",
+              "fundCode",
+              "glAccount",
+              "name"
+            ],
+            "type": "object",
+            "description": "Either a cost centre or a WBS element in SAP can be supplied in the request but not both",
+            "allOf": [
+              {
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "SAP",
+                    "enum": [
+                      "SAP"
+                    ]
+                  },
+                  "glAccount": {
+                    "$ref": "#/components/schemas/GLAccountType"
+                  },
+                  "fundCode": {
+                    "$ref": "#/components/schemas/FundCodeType"
+                  },
+                  "costCentre": {
+                    "$ref": "#/components/schemas/CostCentreType"
+                  }
+                }
+              }
+            ],
+            "oneOf": [
+              {
+                "properties": {
+                  "internalOrder": {
+                    "$ref": "#/components/schemas/InternalOrderType"
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "wbsElement": {
+                    "$ref": "#/components/schemas/WBSElementType"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "FeeMappingDeletionRequestType_data_fee": {
+        "required": [
+          "typeID",
+          "valueID"
+        ],
+        "type": "object",
+        "properties": {
+          "typeID": {
+            "$ref": "#/components/schemas/FeeIDType"
+          },
+          "valueID": {
+            "$ref": "#/components/schemas/FeeValueType"
+          }
+        }
+      },
+      "FeeMappingDeletionRequestType_data": {
+        "required": [
+          "fee",
+          "schoolCode"
+        ],
+        "type": "object",
+        "properties": {
+          "schoolCode": {
+            "$ref": "#/components/schemas/SchoolCodeType"
+          },
+          "fee": {
+            "$ref": "#/components/schemas/FeeMappingDeletionRequestType_data_fee"
+          }
+        }
+      }
+    },
+    "responses": {
+      "401": {
+        "description": "Bad or expired token. Re-authenticate the user to fix.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ErrorType"
+              }
+            }
+          }
+        }
+      },
+      "403": {
+        "description": "Bad OIDC / OAuth2 request (wrong consumer key, bad nonce, expired timestamp etc).",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ErrorType"
+              }
+            }
+          }
+        }
+      },
+      "404": {
+        "description": "Data for the requested input value could not be located.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ErrorType"
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Service encountered an internal error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ErrorType"
+              }
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "domain": {
+        "name": "domain",
+        "in": "query",
+        "description": "Domain query parameter",
+        "required": true,
+        "style": "form",
+        "explode": true,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "finance",
+            "student",
+            "parent",
+            "wellbeing",
+            "staff",
+            "school",
+            "timetable",
+            "attendance",
+            "enrolment"
+          ]
+        },
+        "example": "finance"
+      },
+      "school-code": {
+        "name": "school-code",
+        "in": "path",
+        "required": true,
+        "style": "simple",
+        "explode": false,
+        "schema": {
+          "$ref": "#/components/schemas/SchoolCodeType"
+        }
+      },
+      "finance-application": {
+        "name": "finance-application",
+        "in": "path",
+        "required": true,
+        "style": "simple",
+        "explode": false,
+        "schema": {
+          "$ref": "#/components/schemas/FinanceSystemType"
+        }
+      },
+      "fee-id": {
+        "name": "fee-id",
+        "in": "path",
+        "required": true,
+        "style": "simple",
+        "explode": false,
+        "schema": {
+          "$ref": "#/components/schemas/FeeIDType"
+        }
+      },
+      "internal-order": {
+        "name": "internal-order",
+        "in": "path",
+        "required": true,
+        "style": "simple",
+        "explode": false,
+        "schema": {
+          "$ref": "#/components/schemas/InternalOrderType"
+        }
+      },
+      "wbs-element": {
+        "name": "wbs-element",
+        "in": "path",
+        "required": true,
+        "style": "simple",
+        "explode": false,
+        "schema": {
+          "$ref": "#/components/schemas/WBSElementType"
+        }
+      },
+      "page": {
+        "name": "page",
+        "in": "query",
+        "description": "The page that the user wants to return. The value must be greater than or equal to one.",
+        "required": true,
+        "style": "form",
+        "explode": true,
+        "schema": {
+          "minimum": 1,
+          "type": "integer",
+          "default": 1
+        }
+      },
+      "limit": {
+        "name": "limit",
+        "in": "query",
+        "description": "The number of results per page the user wants to return.",
+        "required": true,
+        "style": "form",
+        "explode": true,
+        "schema": {
+          "maximum": 16384,
+          "minimum": 1024,
+          "type": "integer",
+          "default": 8192
+        }
+      },
+      "x-correlation-id": {
+        "name": "X-Correlation-ID",
+        "in": "header",
+        "description": "The correlation ID",
+        "required": true,
+        "style": "simple",
+        "explode": false,
+        "schema": {
+          "$ref": "#/components/schemas/XCorrelationID"
+        }
+      }
+    },
+    "securitySchemes": {
+      "nsw-education-oauth2-test": {
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "https://sso.test.det.nsw.edu.au/sso/oauth2/realms/api-auth/access_token",
+            "scopes": {
+              "read": "openid finance"
+            }
+          }
+        }
+      },
+      "nsw-education-jwt": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "nsw-education-oidc-dev": {
+        "type": "openIdConnect",
+        "openIdConnectUrl": "https://sso.dev.nsw.edu.au/sso/oauth2/realms/root/realms/saipoc/userinfo"
+      },
+      "nsw-education-oidc-test": {
+        "type": "openIdConnect",
+        "openIdConnectUrl": "https://sso.test.nsw.edu.au/sso/oauth2/realms/root/realms/api-auth/userinfo"
+      }
+    }
+  }
+}
